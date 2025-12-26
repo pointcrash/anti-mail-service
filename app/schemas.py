@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, Union, List
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from app.models import EmailStatus
 
 class EmailRequest(BaseModel):
-    recipient: EmailStr
+    recipient: Union[EmailStr, List[EmailStr]]
     subject: str
     body: str
 
