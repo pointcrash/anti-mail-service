@@ -1,12 +1,21 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from app.database import init_db
+
+from app.database import db_helper
 from app.routers import email
 
-app = FastAPI(title="Anti-Mail Microservice")
 
-@app.on_event("startup")
-async def on_startup():
-    await init_db()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
+    db_helper.init_db()
+    yield
+    # shutdown
+    db_helper.dispose()
+
+
+app = FastAPI(title="Anti-Mail Microservice", lifespan=lifespan)
 
 app.include_router(email.router)
 

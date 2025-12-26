@@ -2,12 +2,12 @@ import asyncio
 import aiosmtplib
 from email.message import EmailMessage
 from sqlalchemy import select
-from app.database import AsyncSessionLocal
+from app.database import db_helper
 from app.models import EmailModel, EmailStatus
 from app.config import settings
 
 async def send_email_task(email_id: int):
-    async with AsyncSessionLocal() as session:
+    async with db_helper.session_factory() as session:
         # Fetch email
         stmt = select(EmailModel).where(EmailModel.id == email_id)
         result = await session.execute(stmt)
@@ -22,17 +22,17 @@ async def send_email_task(email_id: int):
         try:
             if settings.USE_REAL_SMTP:
                 message = EmailMessage()
-                message["From"] = settings.SMTP_FROM_EMAIL
+                message["From"] = settings.smtp.from_email
                 message["To"] = email_obj.recipient
                 message["Subject"] = email_obj.subject
                 message.set_content(email_obj.body)
 
                 await aiosmtplib.send(
                     message,
-                    hostname=settings.SMTP_HOST,
-                    port=settings.SMTP_PORT,
-                    username=settings.SMTP_USER,
-                    password=settings.SMTP_PASSWORD,
+                    hostname=settings.smtp.host,
+                    port=settings.smtp.port,
+                    username=settings.smtp.user,
+                    password=settings.smtp.password,
                     start_tls=True
                 )
             else:
